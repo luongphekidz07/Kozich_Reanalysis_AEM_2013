@@ -39,3 +39,6 @@ code/mothur/mothur code/get_nmds_data.batch
 
 # Calculate the number of OTUs per sample when rarefying to 3000 sequences per sample
 code/mothur/mothur code/get_sobs_data.batch
+
+# Construct NDMS png file
+R -e "source('code/plot_nmds.R'); plot_nmds('')"
