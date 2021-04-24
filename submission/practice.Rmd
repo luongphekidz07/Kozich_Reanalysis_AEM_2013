@@ -1,3 +1,50 @@
+---
+title: Reproducing Kozich et
+author: Pat Scholoss
+date: "April 23 2021"
+output: html_document
+cls: mbio.csl
+bibliography: references.bib
+---
+
+```{r knitr_settings, eval=TRUE, echo=FALSE, cache=FALSE}
+opts_chunk$set("tidy"=TRUE)
+opts_chunk$set("echo"=FALSE)
+opts_chunk$set("eval"=TRUE)
+opts_chunk$set("warning"=FALSE)
+opts_chunk$set("cache"=TRUE)
+
+
+inline_hook <- function(x){
+	if(is.list(x)){
+		x <- unlist(x)
+	}
+	if(is.numeric(x)){
+		if(abs(x - round(x)) < .Machine$double.eps^0.5){
+			paste(format(x,big.mark=',', digits=0, scientific=FALSE))
+		} else {
+			paste(format(x,big.mark=',', digits=1, nsmall=1, scientific=FALSE))
+		}
+	} else {
+		paste(x)
+	}
+}
+knitr::knit_hooks$set(inline=inline_hook)
+
+```
+
+
+
+```{r}
+shared_file_name <- "data/mothur/stability.trim.contigs.good.unique.good.filer.unique.precluster.pick.pick.pick.opti_mcc.unique_list.shared"
+shared_file <- read.table(file=shared_file_name, header=T, stringAsFactor=F)
+sequence_counts <- rowSums(shared_file[,-c(1,2,3)]
+million_sequence_counts <- sum(sequence_counts)/1e6
+average_sequence_counts <- mean(sequence_counts)
+percentile_sequence_counts <- quantile(sequence_counts, prob=0.05)
+```
+
+
 ***Scaling up.*** The advantage of the dual index approach is that a
 large number of samples can be sequenced using a number of primers equal
 to only twice the square root of the number of samples. To fully
@@ -34,3 +81,24 @@ of samples.
 **FIG 4** Principal coordinate ordination of YC values (28) relating the
 community structures of the fecal microbiota from 12 mice collected on days
 0 through 9 (Early) and days 141 through 150 (Late) after weaning.
+
+
+![figure 1](../results/figures/nmds_figure.png)
+
+```{r table_1}
+days <- as.numeric(gsub(".*D(\\d*)", "\\1", shared_file$Group))
+n_samples_per_day <- numeric()
+mean_seqs_per_day_per_sample <- numeric()
+total_seqs_per_day <- numeric()
+unique_days <- sort(unique(days))
+for(d in unique_days){
+	n_samples_per_day[as.character(d)] <- nrow(shared_file[days == d, -c(1,2,3)])
+	total_seqs_per_day[as.character(d)] <- sum(shared_file[days == d, -c(1,2,3)])
+	mean_seqs_per_day_per_sample[as.character(d)] <- mean(apply(shared_file[days == d, -c(1,2,3)], 1, sum), na.rm=T)
+}
+data <- data.frame(unique_days, mean_seqs_per_day_per_sample, total_seqs_per_day, n_samples_per_day)
+kable(data, digits=c(0, 1, 0, 0), row.names=FALSE, col.names=c("Day", "Seqs. per<br>sample (mean)", "Seqs. per<br>day (total)", "Number of<br>samples"), align='c')
+```
+
+
+##References
